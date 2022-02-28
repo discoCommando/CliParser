@@ -4,9 +4,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Lib where
+module Ver1 where
 
-import Common2
 import Data.Data
 import Data.Text
 import Data.Typeable
@@ -21,6 +20,14 @@ data Cmd
   | Result
   deriving stock (Show)
   deriving (Data, Typeable)
+
+type Parser = Parsec Text Text
+
+spaceConsumer :: Parser ()
+spaceConsumer = Lexer.space Char.space1 Mega.empty Mega.empty
+
+symbol :: Text -> Parser Text
+symbol = Lexer.symbol spaceConsumer
 
 cmdP :: Parser Cmd
 cmdP = do

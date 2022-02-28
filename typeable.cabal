@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6224c290237d31254f2250fbbd14d8bbb4af513927f659fc7d3583dd3a7f3695
+-- hash: 11a99e2f118f3fd60658b6b89e4a8fce27512324836e2b8e8e2d98e4751f11b7
 
 name:           typeable
 version:        0.1.0.0
@@ -27,14 +27,24 @@ source-repository head
 
 library
   exposed-modules:
+      Applic
+      Common2
+      Generics1
       Lib
+      TF
+      Ver1
   other-modules:
       Paths_typeable
   hs-source-dirs:
       src
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
+    , hspec
+    , hspec-discover
     , megaparsec
+    , quickcheck-instances
     , text
   default-language: Haskell2010
 
@@ -44,10 +54,15 @@ executable typeable-exe
       Paths_typeable
   hs-source-dirs:
       app
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
+    , hspec
+    , hspec-discover
     , megaparsec
+    , quickcheck-instances
     , text
     , typeable
   default-language: Haskell2010
@@ -56,13 +71,19 @@ test-suite typeable-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      ApplicSpec
       Paths_typeable
   hs-source-dirs:
       test
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
+    , hspec
+    , hspec-discover
     , megaparsec
+    , quickcheck-instances
     , text
     , typeable
   default-language: Haskell2010
