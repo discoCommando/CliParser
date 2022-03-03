@@ -17,7 +17,7 @@ spec = do
   describe "applic" $ do
     describe "prefix" $ do
       let p = "test"
-          t = prefix p ()
+          t = command p ()
 
       it "parser" $ do
         runParser (parser t) p `shouldBe` Right ()
@@ -61,7 +61,7 @@ spec = do
         runParser (recover (symbol "aaa" $> ["bbb"]) *> Mega.takeRest) "xxx ccc" `shouldBe` Right "xxx ccc"
 
     describe "applicative" $ do
-      let pt = prefix "something" (,) <*> token (symbol "aaa" >> pure ()) ["bbb"] <*> token (symbol "ccc" >> pure ()) ["ddd"]
+      let pt = command "something" Nothing (,) <*> token (symbol "aaa" >> pure ()) ["bbb"] <*> token (symbol "ccc" >> pure ()) ["ddd"]
       it "parser" $ do
         runParser (parser pt) "something aaa ccc" `shouldBe` Right ((), ())
       it "prefix" $ do
@@ -87,8 +87,8 @@ spec = do
           completions pt "something aaa ccc" `shouldBe` ["ddd"]
 
     describe "alternative" $ do
-      let p1 = prefix "something" (,) <*> token (symbol "aaa" >> pure 1) ["bbb"] <*> token (symbol "ccc" >> pure 2) ["ddd"]
-          p2 = prefix "nothing" (3 :: Int,) <*> token (symbol "ggg" >> pure (4 :: Int)) ["xxx"]
+      let p1 = command "something" (,) <*> token (symbol "aaa" >> pure 1) ["bbb"] <*> token (symbol "ccc" >> pure 2) ["ddd"]
+          p2 = command "nothing" (3 :: Int,) <*> token (symbol "ggg" >> pure (4 :: Int)) ["xxx"]
           sum = p1 <|> p2
       it "prefixes" $ do
         prefixes sum `shouldBe` ["something", "nothing"]

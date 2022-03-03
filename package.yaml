@@ -27,6 +27,11 @@ dependencies:
   - hspec-discover
   - QuickCheck
   - quickcheck-instances
+  - mtl
+  - containers
+  - generic-lens
+  - lens
+  - prettyprinter
 
 library:
   source-dirs: src
@@ -56,3 +61,6 @@ tests:
 default-extensions: OverloadedStrings
   DerivingStrategies
   ViewPatterns
+  OverloadedLabels
+  GeneralizedNewtypeDeriving
+  DeriveGeneric

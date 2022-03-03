@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 11a99e2f118f3fd60658b6b89e4a8fce27512324836e2b8e8e2d98e4751f11b7
+-- hash: f74bd189c3a4ca19deaa697bf83f896c5c0c19486fad7faee6f7e9697a43d394
 
 name:           typeable
 version:        0.1.0.0
@@ -37,13 +37,18 @@ library
       Paths_typeable
   hs-source-dirs:
       src
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , containers
+    , generic-lens
     , hspec
     , hspec-discover
+    , lens
     , megaparsec
+    , mtl
+    , prettyprinter
     , quickcheck-instances
     , text
   default-language: Haskell2010
@@ -54,14 +59,19 @@ executable typeable-exe
       Paths_typeable
   hs-source-dirs:
       app
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , containers
+    , generic-lens
     , hspec
     , hspec-discover
+    , lens
     , megaparsec
+    , mtl
+    , prettyprinter
     , quickcheck-instances
     , text
     , typeable
@@ -75,14 +85,19 @@ test-suite typeable-test
       Paths_typeable
   hs-source-dirs:
       test
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , containers
+    , generic-lens
     , hspec
     , hspec-discover
+    , lens
     , megaparsec
+    , mtl
+    , prettyprinter
     , quickcheck-instances
     , text
     , typeable
