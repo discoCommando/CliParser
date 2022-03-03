@@ -64,3 +64,35 @@ default-extensions: OverloadedStrings
   OverloadedLabels
   GeneralizedNewtypeDeriving
   DeriveGeneric
+  TypeFamilies
+  AllowAmbiguousTypes
+  DataKinds
+  DeriveGeneric
+  DuplicateRecordFields
+  FlexibleContexts
+  GADTs
+  OverloadedLabels
+  PartialTypeSignatures
+  Rank2Types
+  ScopedTypeVariables
+  TypeApplications
+  UndecidableInstances
+
+ghc-options:
+  - -Weverything
+  - -Werror
+  - -Wno-missing-exported-signatures # missing-exported-signatures turns off the more strict -Wmissing-signatures.
+  - -fno-warn-unused-imports
+  - -Wno-missed-specialisations # When GHC can’t specialize a polymorphic function.
+  - -Wno-all-missed-specialisations # See missed-specialisations
+  - -Wno-unsafe # Don’t use Safe Haskell warnings
+  - -Wno-safe # Don’t use Safe Haskell warnings
+  - -Wno-missing-local-signatures # Warning for polymorphic local bindings; nothing wrong with those.
+  - -Wno-monomorphism-restriction # Don’t warn if the monomorphism restriction is used
+  - -Wno-missing-export-lists # Don't warn if export list is missing
+  - -Wno-missing-safe-haskell-mode
+  - -Wno-prepositive-qualified-module
+  - -Wno-unused-packages
+  - -threaded
+  - -rtsopts
+  - -with-rtsopts=-N

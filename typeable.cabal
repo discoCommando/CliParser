@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f74bd189c3a4ca19deaa697bf83f896c5c0c19486fad7faee6f7e9697a43d394
+-- hash: 7c773f7e51e5c9ec05388429ffa4461ff1fb860b47500d671bcce668d59237b9
 
 name:           typeable
 version:        0.1.0.0
@@ -37,7 +37,8 @@ library
       Paths_typeable
   hs-source-dirs:
       src
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , base >=4.7 && <5
@@ -59,8 +60,8 @@ executable typeable-exe
       Paths_typeable
   hs-source-dirs:
       app
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -threaded -rtsopts -with-rtsopts=-N -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , base >=4.7 && <5
@@ -85,8 +86,8 @@ test-suite typeable-test
       Paths_typeable
   hs-source-dirs:
       test
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -threaded -rtsopts -with-rtsopts=-N -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , base >=4.7 && <5

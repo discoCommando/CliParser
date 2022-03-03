@@ -1,4 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 
 module ApplicSpec where
@@ -17,7 +16,7 @@ spec = do
   describe "applic" $ do
     describe "prefix" $ do
       let p = "test"
-          t = command p ()
+          t = command p Nothing ()
 
       it "parser" $ do
         runParser (parser t) p `shouldBe` Right ()
