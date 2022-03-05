@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7c773f7e51e5c9ec05388429ffa4461ff1fb860b47500d671bcce668d59237b9
+-- hash: 2864577ce376bd09bc40824e1ddb1850f02bd1cea6a122be5594a4ba77c894ea
 
 name:           typeable
 version:        0.1.0.0
@@ -37,7 +37,7 @@ library
       Paths_typeable
   hs-source-dirs:
       src
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances
   ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
@@ -60,7 +60,7 @@ executable typeable-exe
       Paths_typeable
   hs-source-dirs:
       app
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances
   ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -threaded -rtsopts -with-rtsopts=-N -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
@@ -86,7 +86,7 @@ test-suite typeable-test
       Paths_typeable
   hs-source-dirs:
       test
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances
   ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -threaded -rtsopts -with-rtsopts=-N -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck

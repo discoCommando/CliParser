@@ -1,7 +1,7 @@
 module Applic where
 
 import Common2 (Parser, runParser, spaceConsumer, symbol)
-import Control.Lens ((%~), (&), (^.), view)
+import Control.Lens ((%~), (&), (.~), (^.), _1, _2, view)
 import Control.Monad.State ()
 import Data.Char (isSpace)
 import Data.Either (fromRight)
@@ -9,6 +9,7 @@ import Data.Functor (($>))
 import Data.Generics.Labels ()
 import Data.Generics.Product ()
 import Data.Generics.Sum ()
+import Data.List.NonEmpty (toList)
 import qualified Data.Map.Strict as Map
 import Data.Text (Text, last, unwords, words)
 import GHC.Base (Alternative ((<|>), empty), NonEmpty ((:|)))
@@ -24,9 +25,14 @@ import Prettyprinter
     vsep,
   )
 import qualified Text.Megaparsec as Mega
+import Prelude hiding (mod)
 
-newtype Prefix = Prefix (NonEmpty Text)
+newtype Prefix = Prefix {unprefix :: NonEmpty Text}
   deriving newtype (Eq, Ord)
+  deriving stock (Generic)
+
+concatPrefix :: [Text] -> Prefix -> Prefix
+concatPrefix ts (Prefix (t :| rest)) = Prefix (t :| rest ++ ts)
 
 instance Semigroup Prefix where
   (Prefix p1) <> (Prefix p2) = Prefix (p1 <> p2)
@@ -36,7 +42,8 @@ instance Pretty Prefix where
     x :| [] -> pretty x
     x :| xs -> encloseSep lbrace rbrace pipe $ pretty <$> (x : xs) -- {x | y | z}
 
-newtype Description = Description (Maybe Text)
+newtype Description = Description {undescription :: Text}
+  deriving stock (Generic)
 
 instance Semigroup Description where
   (Description p1) <> (Description p2) = Description (p1 <> p2)
@@ -45,7 +52,7 @@ instance Monoid Description where
   mempty = Description mempty
 
 instance Pretty Description where
-  pretty (Description md) = maybe mempty pretty md
+  pretty (Description md) = pretty md
 
 newtype TokenName = TokenName Text
 
@@ -54,7 +61,7 @@ instance Pretty TokenName where
 
 data CommandData = CommandData
   { prefix :: Prefix,
-    description :: Description,
+    description :: Maybe Description,
     tokenNames :: [TokenName]
   }
   deriving stock (Generic)
@@ -68,30 +75,40 @@ instance Pretty CommandData where
           cd ^. #description
       ]
 
--- instance Semigroup CommandData where
---   cd1 <> cd2 = CommandData {
---     prefix' = view #prefix cd1 <> view #prefix cd2,
---     description =
---   }
+data Command -- A command
 
-data Command
+data Token -- One token
 
-data Token
+data Commands -- More than one command
 
-type family DataForLabel a
+-- This is a type family that denotes the data
+-- that needs to be carried for each label type
+type family DataForLabel l
 
-type instance DataForLabel Command = CommandData
+type instance
+  DataForLabel Command =
+    CommandData -- command data for the current command
 
 type instance DataForLabel Token = TokenName
+
+type instance DataForLabel Commands = Map.Map Prefix CommandData
+
+type family Mod' a
+
+type instance
+  Mod' Command =
+    ( [Text], -- aliases
+      Maybe Description -- description
+    )
+
+type instance Mod' Token = [Text] -- completions
 
 -- | CliParser is a main structure that defines our
 -- parsers' internals.
 -- important: It relies heavily on the fact that commands
 -- start from the prefix, and ends with tokens.
 data CliParser label a = CliParser
-  { commandsData :: Map.Map Prefix CommandData,
-    -- | used for applicative instance
-    currentData :: DataForLabel label,
+  { currentData :: DataForLabel label,
     parser :: Parser a,
     completion :: Parser [Text]
   }
@@ -100,29 +117,42 @@ data CliParser label a = CliParser
 prefixCompletionParser :: Parser ()
 prefixCompletionParser = spaceConsumer
 
-command :: Text -> Maybe Text -> a -> CliParser Command a
-command prefix' mdescription a =
+newtype Mod a = Mod {unmod :: Mod' a}
+  deriving stock (Generic)
+
+deriving newtype instance Semigroup (Mod' a) => Semigroup (Mod a)
+
+deriving newtype instance Monoid (Mod' a) => Monoid (Mod a)
+
+command :: Text -> a -> CliParser Command a
+command prefix' a =
+  commandWithMods prefix' a mempty
+
+commandWithMods :: Text -> a -> Mod Command -> CliParser Command a
+commandWithMods prefix' a mod =
   CliParser
-    { commandsData = Map.singleton prefix'' currentCommandData,
-      parser = a <$ symbol prefix',
+    { parser = a <$ symbol prefix',
       completion = prefixCompletionParser $> [prefix'],
       currentData = currentCommandData
     }
   where
-    prefix'' = Prefix (prefix' :| [])
+    prefix'' = Prefix (prefix' :| (unmod mod ^. _1))
     currentCommandData =
       CommandData
         { prefix = prefix'',
-          description = Description mdescription,
+          description = unmod mod ^. _2,
           tokenNames = []
         }
 
-token :: Parser a -> Text -> [Text] -> CliParser Token a
-token p tokenName cpl =
+token :: Parser a -> Text -> CliParser Token a
+token p tokenName =
+  tokenWithMods p tokenName mempty
+
+tokenWithMods :: Parser a -> Text -> Mod Token -> CliParser Token a
+tokenWithMods p tokenName mod =
   CliParser
-    { commandsData = mempty,
-      parser = p,
-      completion = pure cpl,
+    { parser = p,
+      completion = pure (unmod mod),
       currentData = TokenName tokenName
     }
 
@@ -154,8 +184,7 @@ instance Functor (CliParser l) where
 (<*>) :: CliParser Command (a -> b) -> CliParser Token a -> CliParser Command b
 cli1 <*> cli2 =
   CliParser
-    { commandsData = Map.insert (newCurrentData ^. #prefix) newCurrentData $ cli1 ^. #commandsData,
-      parser = view #parser cli1 Prelude.<*> view #parser cli2,
+    { parser = view #parser cli1 Prelude.<*> view #parser cli2,
       completion = do
         -- take the completion from parser cli1, assumming that it will
         -- succeed with eof at the end
@@ -166,42 +195,32 @@ cli1 <*> cli2 =
       currentData = newCurrentData
     }
   where
+    newCurrentData :: CommandData
     newCurrentData = view #currentData cli1 & #tokenNames %~ (++ [view #currentData cli2])
 
--- instance Applicative CliParser where
---   pure a =
---     CliParser
---       { commandsData = mempty,
---         parser = pure a,
---         completion = mempty,
---         currentCommandData =
---           CommandData
---             { prefix' = mempty,
---               description = Description mempty,
---               tokenNames = mempty
---             }
---       }
+class ToCliCommands l where
+  upgradeToCliCommands :: CliParser l a -> CliParser Commands a
 
---   cli1 <*> cli2 =
---     CliParser
---       { commandsData = Map.insert (currentCommandData ^. #prefix') currentCommandData $ cli1 ^. #commandsData,
---         parser = view #parser cli1 <*> view #parser cli2,
---         completion = do
---           -- take the completion from parser cli1, assumming that it will
---           -- succeed with eof at the end
---           cli1Result <- recover (view #completion cli1 <* Mega.eof)
---           -- take the
---           cli2Result <- recover (view #parser cli1 *> view #completion cli2)
---           pure (cli1Result ++ cli2Result),
---         currentCommandData = currentCommandData
---       }
---     where
---       currentCommandData = view #currentCommandData cli1 & #tokenNames %~ (++ view (#currentCommandData . #tokenNames) cli2)
+instance ToCliCommands Command where
+  upgradeToCliCommands cli =
+    cli {currentData = Map.singleton (currentData cli ^. #prefix) (cli ^. #currentData)}
 
--- instance Alternative CliParser where
---   (CliParser pr1 p1 c1) <|> (CliParser pr2 p2 c2) = CliParser (pr1 <> pr2) (p1 <|> p2) ((++) <$> Mega.lookAhead (recover c1) <*> Mega.lookAhead (recover c2))
---   empty = CliParser mempty empty empty
+instance ToCliCommands Commands where
+  upgradeToCliCommands = id
 
--- how do i want to do this
+class CliAlternative a b r where
+  (<|>) :: a -> b -> r
 
--- x = Prefix Plus "plus" <*> Token (..) []
+instance (ToCliCommands l1, ToCliCommands l2) => CliAlternative (CliParser l1 a) (CliParser l2 a) (CliParser Commands a) where
+  cli1 <|> cli2 =
+    CliParser
+      { currentData = view #currentData cli1' <> view #currentData cli2',
+        parser = view #parser cli1' GHC.Base.<|> view #parser cli2',
+        completion = do
+          r1 <- Mega.lookAhead . recover $ view #completion cli1'
+          r2 <- Mega.lookAhead . recover $ view #completion cli2'
+          pure (r1 ++ r2)
+      }
+    where
+      cli1' = upgradeToCliCommands cli1
+      cli2' = upgradeToCliCommands cli2
