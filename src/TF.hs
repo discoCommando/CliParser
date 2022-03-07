@@ -10,11 +10,11 @@ module TF where
 
 import Data.Text
 import GHC.Generics
+import Generics1
 import Text.Megaparsec
 import qualified Text.Megaparsec as Mega
 import qualified Text.Megaparsec.Char as Char
 import qualified Text.Megaparsec.Char.Lexer as Lexer
-import Generics1
 
 data CmdEnum
   = Plus
@@ -23,7 +23,7 @@ data CmdEnum
   deriving stock (Show)
 
 type family CmdResult (cmd :: CmdEnum) where
-  CmdResult Plus = Int
+  CmdResult 'Plus = Int
 
 -- this is broken unfortunately.
 -- data Cmd = Cmd (k :: CmdEnum) (CmdResult k)

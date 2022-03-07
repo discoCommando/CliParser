@@ -7,9 +7,7 @@
 module Lib where
 
 import Common2
-import Data.Data
 import Data.Text
-import Data.Typeable
 import Text.Megaparsec
 import qualified Text.Megaparsec as Mega
 import qualified Text.Megaparsec.Char as Char
@@ -20,7 +18,6 @@ data Cmd
   | Minus Int
   | Result
   deriving stock (Show)
-  deriving (Data, Typeable)
 
 cmdP :: Parser Cmd
 cmdP = do

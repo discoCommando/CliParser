@@ -40,10 +40,10 @@ executables:
   typeable-exe:
     main: Main.hs
     source-dirs: app
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
+    # ghc-options:
+    #   - -threaded
+    #   - -rtsopts
+    #   - -with-rtsopts=-N
     dependencies:
       - typeable
 
@@ -51,12 +51,14 @@ tests:
   typeable-test:
     main: Spec.hs
     source-dirs: test
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
+    # ghc-options:
+    #   - -threaded
+    #   - -rtsopts
+    #   - -with-rtsopts=-N
     dependencies:
       - typeable
+    verbatim:
+      build-tool-depends: hspec-discover:hspec-discover == 2.*
 
 default-extensions: OverloadedStrings
   DerivingStrategies
@@ -80,6 +82,7 @@ default-extensions: OverloadedStrings
   StandaloneDeriving
   MultiParamTypeClasses
   FlexibleInstances
+  NoMonomorphismRestriction
 
 ghc-options:
   - -Weverything
@@ -91,11 +94,13 @@ ghc-options:
   - -Wno-unsafe # Don’t use Safe Haskell warnings
   - -Wno-safe # Don’t use Safe Haskell warnings
   - -Wno-missing-local-signatures # Warning for polymorphic local bindings; nothing wrong with those.
-  - -Wno-monomorphism-restriction # Don’t warn if the monomorphism restriction is used
+  # - -Wno-monomorphism-restriction # Don’t warn if the monomorphism restriction is used
   - -Wno-missing-export-lists # Don't warn if export list is missing
+  - -Wno-missing-import-lists # Don't warn if export list is missing
   - -Wno-missing-safe-haskell-mode
   - -Wno-prepositive-qualified-module
   - -Wno-unused-packages
-  - -threaded
-  - -rtsopts
-  - -with-rtsopts=-N
+  - -Wno-implicit-prelude
+  # - -threaded
+  # - -rtsopts
+  # - -with-rtsopts=-N

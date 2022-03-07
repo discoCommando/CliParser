@@ -156,6 +156,9 @@ tokenWithMods p tokenName mod =
       currentData = TokenName tokenName
     }
 
+withCompletions :: [Text] -> Mod Token
+withCompletions = Mod
+
 -- | recover
 -- A function that returns a parser that consumes an input if succeeded
 -- and does not consume any input if failed (and returning an empty list)
@@ -170,7 +173,7 @@ completionsHelper t
   where
     ws = Data.Text.words t
 
-completions :: CliParser Command a -> Text -> [Text]
+completions :: CliParser l a -> Text -> [Text]
 completions cp =
   fromRight [] . runParser (completion cp) . completionsHelper
 
@@ -224,3 +227,7 @@ instance (ToCliCommands l1, ToCliCommands l2) => CliAlternative (CliParser l1 a)
     where
       cli1' = upgradeToCliCommands cli1
       cli2' = upgradeToCliCommands cli2
+
+-- helper for the tests
+_prefixes :: (ToCliCommands l) => CliParser l a -> [[Text]]
+_prefixes cli1 = toList . unprefix <$> Map.keys (currentData $ upgradeToCliCommands cli1)

@@ -1,27 +1,27 @@
-{-# LANGUAGE TupleSections #-}
-
 module ApplicSpec where
 
 import Applic
 import Common2 (runParser, symbol)
 import Data.Functor (($>))
+import Data.List.NonEmpty (toList)
 import Data.Text
-import GHC.Base (Alternative ((<|>)))
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck
 import qualified Text.Megaparsec as Mega
+import Prelude hiding ((<*>))
 
+spec :: SpecWith ()
 spec = do
   describe "applic" $ do
     describe "prefix" $ do
       let p = "test"
-          t = command p Nothing ()
+          t = command p ()
 
       it "parser" $ do
         runParser (parser t) p `shouldBe` Right ()
       it "prefix" $ do
-        prefixes t `shouldBe` [p]
+        _prefixes t `shouldBe` [[p]]
       describe "completion" $ do
         it "empty word" $ do
           runParser (completion t) "" `shouldBe` Right [p]
@@ -30,12 +30,10 @@ spec = do
 
     describe "token" $ do
       let p = "dupa"
-          t = token (symbol p >> pure ()) ["aaa", "bbb"]
+          t = tokenWithMods (symbol p >> pure ()) "" $ withCompletions ["aaa", "bbb"]
 
       it "parser" $ do
         runParser (parser t) p `shouldBe` Right ()
-      it "prefix" $ do
-        prefixes t `shouldBe` []
       it "completion" $ do
         runParser (completion t) "" `shouldBe` Right ["aaa", "bbb"]
 
@@ -60,11 +58,11 @@ spec = do
         runParser (recover (symbol "aaa" $> ["bbb"]) *> Mega.takeRest) "xxx ccc" `shouldBe` Right "xxx ccc"
 
     describe "applicative" $ do
-      let pt = command "something" Nothing (,) <*> token (symbol "aaa" >> pure ()) ["bbb"] <*> token (symbol "ccc" >> pure ()) ["ddd"]
+      let pt = command "something" (,) <*> tokenWithMods (symbol "aaa" >> pure ()) "" (withCompletions ["bbb"]) <*> tokenWithMods (symbol "ccc" >> pure ()) "" (withCompletions ["ddd"])
       it "parser" $ do
         runParser (parser pt) "something aaa ccc" `shouldBe` Right ((), ())
       it "prefix" $ do
-        prefixes pt `shouldBe` ["something"]
+        _prefixes pt `shouldBe` [["something"]]
       describe "completion" $ do
         it "empty word" $ do
           completions pt "" `shouldBe` ["something"]
@@ -86,22 +84,25 @@ spec = do
           completions pt "something aaa ccc" `shouldBe` ["ddd"]
 
     describe "alternative" $ do
-      let p1 = command "something" (,) <*> token (symbol "aaa" >> pure 1) ["bbb"] <*> token (symbol "ccc" >> pure 2) ["ddd"]
-          p2 = command "nothing" (3 :: Int,) <*> token (symbol "ggg" >> pure (4 :: Int)) ["xxx"]
-          sum = p1 <|> p2
+      let p1 :: CliParser Command (Int, Int)
+          p1 = command "something" (,) <*> tokenWithMods (symbol "aaa" >> pure 1) "" (withCompletions ["bbb"]) <*> tokenWithMods (symbol "ccc" >> pure 2) "" (withCompletions ["ddd"])
+          p2 :: CliParser Command (Int, Int)
+          p2 = command "nothing" ((,) (3 :: Int)) <*> tokenWithMods (symbol "ggg" >> pure (4 :: Int)) "" (withCompletions ["xxx"])
+          sum' :: CliParser Commands (Int, Int)
+          sum' = p1 <|> p2
       it "prefixes" $ do
-        prefixes sum `shouldBe` ["something", "nothing"]
+        _prefixes sum' `shouldBe` [["nothing"], ["something"]]
       it "parser" $ do
-        runParser (parser sum) "something aaa ccc" `shouldBe` Right (1, 2)
-        runParser (parser sum) "nothing ggg" `shouldBe` Right (3, 4)
+        runParser (parser sum') "something aaa ccc" `shouldBe` Right (1 :: Int, 2 :: Int)
+        runParser (parser sum') "nothing ggg" `shouldBe` Right (3 :: Int, 4 :: Int)
       describe "comptletion" $ do
         it "empty word" $ do
-          completions sum "" `shouldBe` ["something", "nothing"]
+          completions sum' "" `shouldBe` ["something", "nothing"]
         it "space" $ do
-          completions sum " " `shouldBe` ["something", "nothing"]
+          completions sum' " " `shouldBe` ["something", "nothing"]
         it "whole first word with space" $ do
-          completions sum "something " `shouldBe` ["bbb"]
+          completions sum' "something " `shouldBe` ["bbb"]
         it "whole second word with space" $ do
-          completions sum "something aaa " `shouldBe` ["ddd"]
+          completions sum' "something aaa " `shouldBe` ["ddd"]
         it "first word, second case" $ do
-          completions sum "nothing ggg " `shouldBe` ["xxx"]
+          completions sum' "nothing ggg " `shouldBe` ["xxx"]

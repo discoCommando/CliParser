@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -6,9 +5,7 @@
 
 module Ver1 where
 
-import Data.Data
 import Data.Text
-import Data.Typeable
 import Text.Megaparsec
 import qualified Text.Megaparsec as Mega
 import qualified Text.Megaparsec.Char as Char
@@ -19,7 +16,6 @@ data Cmd
   | Minus Int
   | Result
   deriving stock (Show)
-  deriving (Data, Typeable)
 
 type Parser = Parsec Text Text
 
