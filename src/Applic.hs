@@ -1,7 +1,7 @@
 module Applic where
 
 import Common2 (Parser, runParser, spaceConsumer, symbol)
-import Control.Lens ((%~), (&), (.~), (^.), _1, _2, view)
+import Control.Lens ((%~), (&), (.~), (^.), (^?), _1, _2, view)
 import Control.Monad.State ()
 import Data.Char (isSpace)
 import Data.Either (fromRight)
@@ -30,9 +30,6 @@ import Prelude hiding (mod)
 newtype Prefix = Prefix {unprefix :: NonEmpty Text}
   deriving newtype (Eq, Ord)
   deriving stock (Generic)
-
-concatPrefix :: [Text] -> Prefix -> Prefix
-concatPrefix ts (Prefix (t :| rest)) = Prefix (t :| rest ++ ts)
 
 instance Semigroup Prefix where
   (Prefix p1) <> (Prefix p2) = Prefix (p1 <> p2)
@@ -144,6 +141,12 @@ commandWithMods prefix' a mod =
           tokenNames = []
         }
 
+withAlias :: [Text] -> Mod Command
+withAlias t = Mod (t, Nothing)
+
+withDescription :: Text -> Mod Command
+withDescription t = Mod ([], Just $ Description t)
+
 token :: Parser a -> Text -> CliParser Token a
 token p tokenName =
   tokenWithMods p tokenName mempty
@@ -212,9 +215,9 @@ instance ToCliCommands Commands where
   upgradeToCliCommands = id
 
 class CliAlternative a b r where
-  (<|>) :: a -> b -> r
+  (<|>) :: CliParser a r -> CliParser b r -> CliParser Commands r
 
-instance (ToCliCommands l1, ToCliCommands l2) => CliAlternative (CliParser l1 a) (CliParser l2 a) (CliParser Commands a) where
+instance (ToCliCommands l1, ToCliCommands l2) => CliAlternative l1 l2 a where
   cli1 <|> cli2 =
     CliParser
       { currentData = view #currentData cli1' <> view #currentData cli2',
@@ -231,3 +234,6 @@ instance (ToCliCommands l1, ToCliCommands l2) => CliAlternative (CliParser l1 a)
 -- helper for the tests
 _prefixes :: (ToCliCommands l) => CliParser l a -> [[Text]]
 _prefixes cli1 = toList . unprefix <$> Map.keys (currentData $ upgradeToCliCommands cli1)
+
+_descriptions :: (ToCliCommands l) => CliParser l a -> [([Text], Maybe Text)]
+_descriptions cli = (\(k, v) -> (toList . unprefix $ k, v ^? #description . #_Just . #undescription)) <$> Map.toList (currentData $ upgradeToCliCommands cli)

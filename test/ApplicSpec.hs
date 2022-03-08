@@ -16,17 +16,21 @@ spec = do
   describe "applic" $ do
     describe "prefix" $ do
       let p = "test"
-          t = command p ()
+          t = commandWithMods p () (withDescription "description" <> withAlias ["alternative", ":t"])
 
       it "parser" $ do
         runParser (parser t) p `shouldBe` Right ()
       it "prefix" $ do
-        _prefixes t `shouldBe` [[p]]
+        _prefixes t `shouldBe` [["test", "alternative", ":t"]]
+      it "prefix" $ do
+        _descriptions t `shouldBe` [(["test", "alternative", ":t"], Just "description")]
       describe "completion" $ do
         it "empty word" $ do
-          runParser (completion t) "" `shouldBe` Right [p]
+          runParser (completion t) "" `shouldBe` Right ["test", "alternative", ":t"]
         it "non empty word" $ do
-          runParser (completion t) "aaaa" `shouldBe` Right [p]
+          runParser (completion t) "te" `shouldBe` Right ["test"]
+          runParser (completion t) ":" `shouldBe` Right [":t"]
+          runParser (completion t) "a" `shouldBe` Right ["alternative"]
 
     describe "token" $ do
       let p = "dupa"
@@ -84,18 +88,18 @@ spec = do
           completions pt "something aaa ccc" `shouldBe` ["ddd"]
 
     describe "alternative" $ do
-      let p1 :: CliParser Command (Int, Int)
-          p1 = command "something" (,) <*> tokenWithMods (symbol "aaa" >> pure 1) "" (withCompletions ["bbb"]) <*> tokenWithMods (symbol "ccc" >> pure 2) "" (withCompletions ["ddd"])
-          p2 :: CliParser Command (Int, Int)
+      let --p1 :: CliParser Command (Int, Int)
+          p1 = command "something" (,) <*> tokenWithMods (symbol "aaa" >> pure (1 :: Int)) "" (withCompletions ["bbb"]) <*> tokenWithMods (symbol "ccc" >> pure (2 :: Int)) "" (withCompletions ["ddd"])
+          -- p2 :: CliParser Command (Int, Int)
           p2 = command "nothing" ((,) (3 :: Int)) <*> tokenWithMods (symbol "ggg" >> pure (4 :: Int)) "" (withCompletions ["xxx"])
-          sum' :: CliParser Commands (Int, Int)
+          -- sum' :: CliParser Commands (Int, Int)
           sum' = p1 <|> p2
       it "prefixes" $ do
         _prefixes sum' `shouldBe` [["nothing"], ["something"]]
       it "parser" $ do
         runParser (parser sum') "something aaa ccc" `shouldBe` Right (1 :: Int, 2 :: Int)
         runParser (parser sum') "nothing ggg" `shouldBe` Right (3 :: Int, 4 :: Int)
-      describe "comptletion" $ do
+      describe "completion" $ do
         it "empty word" $ do
           completions sum' "" `shouldBe` ["something", "nothing"]
         it "space" $ do
