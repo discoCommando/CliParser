@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2bc55201223182f670b3c5585fe804fcc54d8438bd64d336224b07a0e82aba1d
+-- hash: ef64f2c60e419f427e5e6e3fb98462dd85612ad129c6b5bc2cc985e88c37c0c7
 
 name:           typeable
 version:        0.1.0.0
@@ -38,7 +38,7 @@ library
   hs-source-dirs:
       src
   default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances NoMonomorphismRestriction
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-implicit-prelude
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
   build-depends:
       QuickCheck
     , base >=4.7 && <5
@@ -61,7 +61,7 @@ executable typeable-exe
   hs-source-dirs:
       app
   default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances NoMonomorphismRestriction
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-implicit-prelude
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
   build-depends:
       QuickCheck
     , base >=4.7 && <5
@@ -87,7 +87,7 @@ test-suite typeable-test
   hs-source-dirs:
       test
   default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances NoMonomorphismRestriction
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-implicit-prelude
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
   build-depends:
       QuickCheck
     , base >=4.7 && <5

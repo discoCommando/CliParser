@@ -98,8 +98,9 @@ ghc-options:
   - -Wno-missing-export-lists # Don't warn if export list is missing
   - -Wno-missing-import-lists # Don't warn if export list is missing
   - -Wno-missing-safe-haskell-mode
-  - -Wno-prepositive-qualified-module
-  - -Wno-unused-packages
+  # -Wmissing-safe-haskell-mode
+  # - -Wno-prepositive-qualified-module
+  # - -Wno-unused-packages
   - -Wno-implicit-prelude
   # - -threaded
   # - -rtsopts
