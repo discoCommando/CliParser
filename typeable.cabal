@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ef64f2c60e419f427e5e6e3fb98462dd85612ad129c6b5bc2cc985e88c37c0c7
+-- hash: 1cbf1840fa2588aa5e36e7a8a7b16c2997bd7b61c32889b30aae50cbb9cb8fa8
 
 name:           typeable
 version:        0.1.0.0
@@ -27,18 +27,15 @@ source-repository head
 
 library
   exposed-modules:
-      Applic
+      CliParser
       Common2
-      Generics1
       Lib
-      TF
-      Ver1
   other-modules:
       Paths_typeable
   hs-source-dirs:
       src
   default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances NoMonomorphismRestriction
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-implicit-prelude
   build-depends:
       QuickCheck
     , base >=4.7 && <5
@@ -61,7 +58,7 @@ executable typeable-exe
   hs-source-dirs:
       app
   default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances NoMonomorphismRestriction
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-implicit-prelude
   build-depends:
       QuickCheck
     , base >=4.7 && <5
@@ -82,12 +79,12 @@ test-suite typeable-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      ApplicSpec
+      CliParserSpec
       Paths_typeable
   hs-source-dirs:
       test
   default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances NoMonomorphismRestriction
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-implicit-prelude
   build-depends:
       QuickCheck
     , base >=4.7 && <5

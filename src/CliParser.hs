@@ -1,4 +1,4 @@
-module Applic where
+module CliParser where
 
 import Common2 (Parser, runParser, spaceConsumer, symbol)
 import Control.Lens ((%~), (&), (.~), (^.), (^?), _1, _2, view)

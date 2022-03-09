@@ -1,6 +1,6 @@
-module ApplicSpec where
+module CliParserSpec where
 
-import Applic
+import CliParser
 import Common2 (runParser, symbol)
 import Data.Functor (($>))
 import Data.List.NonEmpty (toList)
@@ -13,7 +13,7 @@ import Prelude hiding ((<*>))
 
 spec :: SpecWith ()
 spec = do
-  describe "applic" $ do
+  describe "cliParser" $ do
     describe "prefix" $ do
       let p = "test"
           t = commandWithMods p () (withDescription "description" <> withAlias ["alternative", ":t"])
