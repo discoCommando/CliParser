@@ -1,0 +1,13 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:typeable"
+
+    - path: "app/Main.hs"
+      component: "typeable:exe:typeable-exe"
+
+    - path: "app/Paths_typeable.hs"
+      component: "typeable:exe:typeable-exe"
+
+    - path: "test"
+      component: "typeable:test:typeable-test"

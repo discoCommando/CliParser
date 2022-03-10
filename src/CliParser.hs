@@ -104,14 +104,14 @@ type instance Mod' Token = [Text] -- completions
 -- parsers' internals.
 -- important: It relies heavily on the fact that commands
 -- start from the prefix, and ends with tokens.
-data CliParser label a = CliParser
+data CliParser err label a = CliParser
   { currentData :: DataForLabel label,
-    parser :: Parser a,
-    completion :: Parser [Text]
+    parser :: Parser err a,
+    completion :: Parser err [Text]
   }
   deriving stock (Generic)
 
-prefixCompletionParser :: Parser ()
+prefixCompletionParser :: Ord err => Parser err ()
 prefixCompletionParser = spaceConsumer
 
 newtype Mod a = Mod {unmod :: Mod' a}
@@ -121,11 +121,11 @@ deriving newtype instance Semigroup (Mod' a) => Semigroup (Mod a)
 
 deriving newtype instance Monoid (Mod' a) => Monoid (Mod a)
 
-command :: Text -> a -> CliParser Command a
+command :: Ord err => Text -> a -> CliParser err Command a
 command prefix' a =
   commandWithMods prefix' a mempty
 
-commandWithMods :: Text -> a -> Mod Command -> CliParser Command a
+commandWithMods :: Ord err => Text -> a -> Mod Command -> CliParser err Command a
 commandWithMods prefix' a mod =
   CliParser
     { parser = a <$ symbol prefix',
@@ -147,11 +147,11 @@ withAlias t = Mod (t, Nothing)
 withDescription :: Text -> Mod Command
 withDescription t = Mod ([], Just $ Description t)
 
-token :: Parser a -> Text -> CliParser Token a
+token :: Parser err a -> Text -> CliParser err Token a
 token p tokenName =
   tokenWithMods p tokenName mempty
 
-tokenWithMods :: Parser a -> Text -> Mod Token -> CliParser Token a
+tokenWithMods :: Parser err a -> Text -> Mod Token -> CliParser err Token a
 tokenWithMods p tokenName mod =
   CliParser
     { parser = p,
@@ -165,7 +165,7 @@ withCompletions = Mod
 -- | recover
 -- A function that returns a parser that consumes an input if succeeded
 -- and does not consume any input if failed (and returning an empty list)
-recover :: Parser [Text] -> Parser [Text]
+recover :: Ord err => Parser err [Text] -> Parser err [Text]
 recover = fmap (fromRight []) . Mega.observing . Mega.try
 
 completionsHelper :: Text -> Text
@@ -176,18 +176,18 @@ completionsHelper t
   where
     ws = Data.Text.words t
 
-completions :: CliParser l a -> Text -> [Text]
+completions :: CliParser err l a -> Text -> [Text]
 completions cp =
-  fromRight [] . runParser (completion cp) . completionsHelper
+  fromRight [] . Mega.runParser (completion cp) "completions" . completionsHelper
 
-instance Functor (CliParser l) where
+instance Functor (CliParser err l) where
   fmap f cli = cli & #parser %~ fmap f
 
 -- | This function mimicks the Applicative instance.
 --  But to make it impossible to mess up the order (first command, then tokens)
 --  CliParser has `label` type parameter. It makes it impossible to
 --  write the Applicative instance for it.
-(<*>) :: CliParser Command (a -> b) -> CliParser Token a -> CliParser Command b
+(<*>) :: (Ord err) => CliParser err Command (a -> b) -> CliParser err Token a -> CliParser err Command b
 cli1 <*> cli2 =
   CliParser
     { parser = view #parser cli1 Prelude.<*> view #parser cli2,
@@ -205,7 +205,7 @@ cli1 <*> cli2 =
     newCurrentData = view #currentData cli1 & #tokenNames %~ (++ [view #currentData cli2])
 
 class ToCliCommands l where
-  upgradeToCliCommands :: CliParser l a -> CliParser Commands a
+  upgradeToCliCommands :: CliParser err l a -> CliParser err Commands a
 
 instance ToCliCommands Command where
   upgradeToCliCommands cli =
@@ -214,10 +214,10 @@ instance ToCliCommands Command where
 instance ToCliCommands Commands where
   upgradeToCliCommands = id
 
-class CliAlternative a b r where
-  (<|>) :: CliParser a r -> CliParser b r -> CliParser Commands r
+class CliAlternative err a b r where
+  (<|>) :: CliParser err a r -> CliParser err b r -> CliParser err Commands r
 
-instance (ToCliCommands l1, ToCliCommands l2) => CliAlternative l1 l2 a where
+instance (Ord err, ToCliCommands l1, ToCliCommands l2) => CliAlternative err l1 l2 a where
   cli1 <|> cli2 =
     CliParser
       { currentData = view #currentData cli1' <> view #currentData cli2',
@@ -232,8 +232,8 @@ instance (ToCliCommands l1, ToCliCommands l2) => CliAlternative l1 l2 a where
       cli2' = upgradeToCliCommands cli2
 
 -- helper for the tests
-_prefixes :: (ToCliCommands l) => CliParser l a -> [[Text]]
+_prefixes :: (ToCliCommands l) => CliParser err l a -> [[Text]]
 _prefixes cli1 = toList . unprefix <$> Map.keys (currentData $ upgradeToCliCommands cli1)
 
-_descriptions :: (ToCliCommands l) => CliParser l a -> [([Text], Maybe Text)]
+_descriptions :: (ToCliCommands l) => CliParser err l a -> [([Text], Maybe Text)]
 _descriptions cli = (\(k, v) -> (toList . unprefix $ k, v ^? #description . #_Just . #undescription)) <$> Map.toList (currentData $ upgradeToCliCommands cli)

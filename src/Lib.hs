@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -19,7 +18,7 @@ data Cmd
   | Result
   deriving stock (Show)
 
-cmdP :: Parser Cmd
+cmdP :: Parser Text Cmd
 cmdP = do
   Mega.choice [plusP, minusP, resultP]
   where

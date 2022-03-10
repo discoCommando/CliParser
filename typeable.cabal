@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1cbf1840fa2588aa5e36e7a8a7b16c2997bd7b61c32889b30aae50cbb9cb8fa8
+-- hash: 784a89887fbabca37ec194d9d7a48e5aa0c634eaad6b7c52d76f249737af44f7
 
 name:           typeable
 version:        0.1.0.0
@@ -34,20 +34,16 @@ library
       Paths_typeable
   hs-source-dirs:
       src
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances NoMonomorphismRestriction
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-implicit-prelude
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-implicit-prelude
   build-depends:
-      QuickCheck
-    , base >=4.7 && <5
+      base >=4.7 && <5
     , containers
     , generic-lens
-    , hspec
-    , hspec-discover
     , lens
     , megaparsec
     , mtl
     , prettyprinter
-    , quickcheck-instances
     , text
   default-language: Haskell2010
 
@@ -57,20 +53,16 @@ executable typeable-exe
       Paths_typeable
   hs-source-dirs:
       app
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances NoMonomorphismRestriction
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-implicit-prelude
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-implicit-prelude
   build-depends:
-      QuickCheck
-    , base >=4.7 && <5
+      base >=4.7 && <5
     , containers
     , generic-lens
-    , hspec
-    , hspec-discover
     , lens
     , megaparsec
     , mtl
     , prettyprinter
-    , quickcheck-instances
     , text
     , typeable
   default-language: Haskell2010
@@ -83,8 +75,8 @@ test-suite typeable-test
       Paths_typeable
   hs-source-dirs:
       test
-  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances NoMonomorphismRestriction
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-implicit-prelude
+  default-extensions: OverloadedStrings DerivingStrategies ViewPatterns OverloadedLabels GeneralizedNewtypeDeriving DeriveGeneric TypeFamilies AllowAmbiguousTypes DataKinds DeriveGeneric DuplicateRecordFields FlexibleContexts GADTs OverloadedLabels PartialTypeSignatures Rank2Types ScopedTypeVariables TypeApplications UndecidableInstances StandaloneDeriving MultiParamTypeClasses FlexibleInstances
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -fno-warn-unused-imports -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-implicit-prelude
   build-depends:
       QuickCheck
     , base >=4.7 && <5
