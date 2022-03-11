@@ -26,15 +26,15 @@ spec = do
         _descriptions t `shouldBe` [(["test", "alternative", ":t"], Just "description")]
       describe "completion" $ do
         it "empty word" $ do
-          runParser (completion t) "" `shouldBe` Right ["test", "alternative", ":t"]
+          completions t "" `shouldBe` ["test", "alternative", ":t"]
         it "non empty word" $ do
-          runParser (completion t) "te" `shouldBe` Right ["test"]
-          runParser (completion t) ":" `shouldBe` Right [":t"]
-          runParser (completion t) "a" `shouldBe` Right ["alternative"]
+          completions t "te" `shouldBe` ["test"]
+          completions t ":" `shouldBe` [":t"]
+          completions t "a" `shouldBe` ["alternative"]
 
-    describe "token" $ do
+    describe "argument" $ do
       let p = "dupa"
-          t = tokenWithMods (symbol p >> pure ()) "" $ withCompletions ["aaa", "bbb"]
+          t = argumentWithMods (symbol p >> pure ()) "" $ withCompletions ["aaa", "bbb"]
 
       it "parser" $ do
         runParser (parser t) p `shouldBe` Right ()
@@ -43,13 +43,15 @@ spec = do
 
     describe "completionsHelper" $ do
       it "empty" $ do
-        completionsHelper "" `shouldBe` ""
+        completionsHelper "" `shouldBe` ("", "")
       it "first word" $
-        completionsHelper "a" `shouldBe` ""
+        completionsHelper "a" `shouldBe` ("", "a")
       it "first word with space" $
-        completionsHelper "a " `shouldBe` "a"
-      it "two wordsr" $
-        completionsHelper "a a" `shouldBe` "a"
+        completionsHelper "a " `shouldBe` ("a", "")
+      it "two words" $
+        completionsHelper "a a" `shouldBe` ("a", "a")
+      it "three words" $
+        completionsHelper "abc efg hjk" `shouldBe` ("abc efg", "hjk")
 
     describe "recover" $ do
       it "happy path" $ do
@@ -62,7 +64,7 @@ spec = do
         runParser (recover (symbol "aaa" $> ["bbb"]) *> Mega.takeRest) "xxx ccc" `shouldBe` Right "xxx ccc"
 
     describe "applicative" $ do
-      let pt = command "something" (,) <*> tokenWithMods (symbol "aaa" >> pure ()) "" (withCompletions ["bbb"]) <*> tokenWithMods (symbol "ccc" >> pure ()) "" (withCompletions ["ddd"])
+      let pt = command "something" (,) <*> argumentWithMods (symbol "aaa" >> pure ()) "" (withCompletions ["aaa", "aaaa"]) <*> argumentWithMods (symbol "ccc" >> pure ()) "" (withCompletions ["ccc", "cc"])
       it "parser" $ do
         runParser (parser pt) "something aaa ccc" `shouldBe` Right ((), ())
       it "prefix" $ do
@@ -75,23 +77,23 @@ spec = do
         it "whole first word" $ do
           completions pt "something" `shouldBe` ["something"]
         it "first word complete with space" $ do
-          completions pt "something " `shouldBe` ["bbb"]
+          completions pt "something " `shouldBe` ["aaa", "aaaa"]
         it "first word complete, substring of the second word" $ do
-          completions pt "something aa" `shouldBe` ["bbb"]
+          completions pt "something aa" `shouldBe` ["aaa", "aaaa"]
         it "first word complete, whole second word" $ do
-          completions pt "something aaa" `shouldBe` ["bbb"]
+          completions pt "something aaa" `shouldBe` ["aaa", "aaaa"]
         it "first and second word complete with space" $ do
-          completions pt "something aaa " `shouldBe` ["ddd"]
+          completions pt "something aaa " `shouldBe` ["ccc", "cc"]
         it "first and second word complete, substring of the third word" $ do
-          completions pt "something aaa c" `shouldBe` ["ddd"]
+          completions pt "something aaa c" `shouldBe` ["ccc", "cc"]
         it "first and second word complete, whole third word" $ do
-          completions pt "something aaa ccc" `shouldBe` ["ddd"]
+          completions pt "something aaa ccc" `shouldBe` ["ccc"]
 
     describe "alternative" $ do
       let --p1 :: CliParser Command (Int, Int)
-          p1 = command "something" (,) <*> tokenWithMods (symbol "aaa" >> pure (1 :: Int)) "" (withCompletions ["bbb"]) <*> tokenWithMods (symbol "ccc" >> pure (2 :: Int)) "" (withCompletions ["ddd"])
+          p1 = command "something" (,) <*> argumentWithMods (symbol "aaa" >> pure (1 :: Int)) "" (withCompletions ["bbb"]) <*> argumentWithMods (symbol "ccc" >> pure (2 :: Int)) "" (withCompletions ["ddd"])
           -- p2 :: CliParser Command (Int, Int)
-          p2 = command "nothing" ((,) (3 :: Int)) <*> tokenWithMods (symbol "ggg" >> pure (4 :: Int)) "" (withCompletions ["xxx"])
+          p2 = command "nothing" ((,) (3 :: Int)) <*> argumentWithMods (symbol "ggg" >> pure (4 :: Int)) "" (withCompletions ["xxx"])
           -- sum' :: CliParser Commands (Int, Int)
           sum' = p1 <|> p2
       it "prefixes" $ do

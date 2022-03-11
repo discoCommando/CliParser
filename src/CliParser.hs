@@ -12,6 +12,8 @@ import Data.Generics.Sum ()
 import Data.List.NonEmpty (toList)
 import qualified Data.Map.Strict as Map
 import Data.Text (Text, last, unwords, words)
+import qualified Data.Text as Text
+import qualified Debug.Trace as Trace
 import GHC.Base (Alternative ((<|>), empty), NonEmpty ((:|)))
 import GHC.Generics (Generic)
 import Prettyprinter
@@ -51,15 +53,15 @@ instance Monoid Description where
 instance Pretty Description where
   pretty (Description md) = pretty md
 
-newtype TokenName = TokenName Text
+newtype ArgumentName = ArgumentName Text
 
-instance Pretty TokenName where
-  pretty (TokenName tokenName) = angles $ pretty tokenName
+instance Pretty ArgumentName where
+  pretty (ArgumentName argumentName) = angles $ pretty argumentName
 
 data CommandData = CommandData
   { prefix :: Prefix,
     description :: Maybe Description,
-    tokenNames :: [TokenName]
+    argumentNames :: [ArgumentName]
   }
   deriving stock (Generic)
 
@@ -67,14 +69,14 @@ instance Pretty CommandData where
   pretty cd =
     vsep
       [ hsep
-          (pretty (cd ^. #prefix) : fmap pretty (cd ^. #tokenNames)),
+          (pretty (cd ^. #prefix) : fmap pretty (cd ^. #argumentNames)),
         pretty $
           cd ^. #description
       ]
 
 data Command -- A command
 
-data Token -- One token
+data Argument -- One argument
 
 data Commands -- More than one command
 
@@ -86,7 +88,7 @@ type instance
   DataForLabel Command =
     CommandData -- command data for the current command
 
-type instance DataForLabel Token = TokenName
+type instance DataForLabel Argument = ArgumentName
 
 type instance DataForLabel Commands = Map.Map Prefix CommandData
 
@@ -98,12 +100,12 @@ type instance
       Maybe Description -- description
     )
 
-type instance Mod' Token = [Text] -- completions
+type instance Mod' Argument = [Text] -- completions
 
 -- | CliParser is a main structure that defines our
 -- parsers' internals.
 -- important: It relies heavily on the fact that commands
--- start from the prefix, and ends with tokens.
+-- start from the prefix, and ends with arguments.
 data CliParser err label a = CliParser
   { currentData :: DataForLabel label,
     parser :: Parser err a,
@@ -129,7 +131,7 @@ commandWithMods :: Ord err => Text -> a -> Mod Command -> CliParser err Command 
 commandWithMods prefix' a mod =
   CliParser
     { parser = a <$ symbol prefix',
-      completion = prefixCompletionParser $> [prefix'],
+      completion = prefixCompletionParser $> (prefix' : unmod mod ^. _1),
       currentData = currentCommandData
     }
   where
@@ -138,7 +140,7 @@ commandWithMods prefix' a mod =
       CommandData
         { prefix = prefix'',
           description = unmod mod ^. _2,
-          tokenNames = []
+          argumentNames = []
         }
 
 withAlias :: [Text] -> Mod Command
@@ -147,19 +149,19 @@ withAlias t = Mod (t, Nothing)
 withDescription :: Text -> Mod Command
 withDescription t = Mod ([], Just $ Description t)
 
-token :: Parser err a -> Text -> CliParser err Token a
-token p tokenName =
-  tokenWithMods p tokenName mempty
+argument :: Parser err a -> Text -> CliParser err Argument a
+argument p argumentName =
+  argumentWithMods p argumentName mempty
 
-tokenWithMods :: Parser err a -> Text -> Mod Token -> CliParser err Token a
-tokenWithMods p tokenName mod =
+argumentWithMods :: Parser err a -> Text -> Mod Argument -> CliParser err Argument a
+argumentWithMods p argumentName mod =
   CliParser
     { parser = p,
       completion = pure (unmod mod),
-      currentData = TokenName tokenName
+      currentData = ArgumentName argumentName
     }
 
-withCompletions :: [Text] -> Mod Token
+withCompletions :: [Text] -> Mod Argument
 withCompletions = Mod
 
 -- | recover
@@ -168,26 +170,28 @@ withCompletions = Mod
 recover :: Ord err => Parser err [Text] -> Parser err [Text]
 recover = fmap (fromRight []) . Mega.observing . Mega.try
 
-completionsHelper :: Text -> Text
+completionsHelper :: Text -> (Text, Text)
 completionsHelper t
-  | Prelude.null ws = t
-  | Data.Char.isSpace $ Data.Text.last t = Data.Text.unwords ws
-  | otherwise = Data.Text.unwords $ Prelude.init ws
+  | Prelude.null ws = (t, "")
+  | Data.Char.isSpace $ Data.Text.last t = (Data.Text.unwords ws, "")
+  | otherwise = (Data.Text.unwords $ Prelude.init ws, Prelude.last ws)
   where
     ws = Data.Text.words t
 
 completions :: CliParser err l a -> Text -> [Text]
-completions cp =
-  fromRight [] . Mega.runParser (completion cp) "completions" . completionsHelper
+completions cp input =
+  filter (Text.isPrefixOf incompleteInput) . Trace.traceShow incompleteInput . Trace.traceShowId . fromRight [] . Mega.runParser (completion cp) "completions" $ completedInput
+  where
+    (completedInput, incompleteInput) = completionsHelper input
 
 instance Functor (CliParser err l) where
   fmap f cli = cli & #parser %~ fmap f
 
 -- | This function mimicks the Applicative instance.
---  But to make it impossible to mess up the order (first command, then tokens)
+--  But to make it impossible to mess up the order (first command, then arguments)
 --  CliParser has `label` type parameter. It makes it impossible to
 --  write the Applicative instance for it.
-(<*>) :: (Ord err) => CliParser err Command (a -> b) -> CliParser err Token a -> CliParser err Command b
+(<*>) :: (Ord err) => CliParser err Command (a -> b) -> CliParser err Argument a -> CliParser err Command b
 cli1 <*> cli2 =
   CliParser
     { parser = view #parser cli1 Prelude.<*> view #parser cli2,
@@ -202,7 +206,7 @@ cli1 <*> cli2 =
     }
   where
     newCurrentData :: CommandData
-    newCurrentData = view #currentData cli1 & #tokenNames %~ (++ [view #currentData cli2])
+    newCurrentData = view #currentData cli1 & #argumentNames %~ (++ [view #currentData cli2])
 
 class ToCliCommands l where
   upgradeToCliCommands :: CliParser err l a -> CliParser err Commands a

@@ -5,12 +5,14 @@
 
 module Lib where
 
+import CliParser
 import Common2
 import Data.Text
-import Text.Megaparsec
-import qualified Text.Megaparsec as Mega
+import Text.Megaparsec hiding ((<|>))
+import qualified Text.Megaparsec as Mega hiding ((<|>))
 import qualified Text.Megaparsec.Char as Char
 import qualified Text.Megaparsec.Char.Lexer as Lexer
+import Prelude hiding ((<*>))
 
 data Cmd
   = Plus Int
@@ -18,13 +20,17 @@ data Cmd
   | Result
   deriving stock (Show)
 
-cmdP :: Parser Text Cmd
-cmdP = do
-  Mega.choice [plusP, minusP, resultP]
-  where
-    plusP = Plus <$> (symbol "plus" >> Lexer.decimal)
-    minusP = Minus <$> (symbol "minus" >> Lexer.decimal)
-    resultP = Result <$ symbol "result"
+cmdP :: CliParser Text Commands Cmd
+cmdP =
+  (command "plus" Plus <*> argument Lexer.decimal "arg")
+    <|> (command "minus" Minus <*> argument Lexer.decimal "arg")
+    <|> command "result" Result
+
+-- Mega.choice [plusP, minusP, resultP]
+-- where
+--   plusP = Plus <$> (symbol "plus" >> Lexer.decimal)
+--   minusP = Minus <$> (symbol "minus" >> Lexer.decimal)
+--   resultP = Result <$ symbol "result"
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
