@@ -8,11 +8,10 @@ module Lib where
 import CliParser
 import Common2
 import Data.Text
-import Text.Megaparsec hiding ((<|>))
-import qualified Text.Megaparsec as Mega hiding ((<|>))
+import Text.Megaparsec
+import qualified Text.Megaparsec as Mega
 import qualified Text.Megaparsec.Char as Char
 import qualified Text.Megaparsec.Char.Lexer as Lexer
-import Prelude hiding ((<*>))
 
 data Cmd
   = Plus Int
@@ -20,7 +19,7 @@ data Cmd
   | Result
   deriving stock (Show)
 
-cmdP :: CliParser Text Commands Cmd
+cmdP :: CliParser Text Cmd
 cmdP =
   (command "plus" Plus <*> argument Lexer.decimal "arg")
     <|> (command "minus" Minus <*> argument Lexer.decimal "arg")

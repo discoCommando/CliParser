@@ -2,6 +2,7 @@ module CliParserSpec where
 
 import CliParser
 import Common2 (runParser, symbol)
+import Control.Applicative ((<|>))
 import Data.Functor (($>))
 import Data.List.NonEmpty (toList)
 import Data.Text
@@ -9,7 +10,6 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck
 import qualified Text.Megaparsec as Mega
-import Prelude hiding ((<*>))
 
 spec :: SpecWith ()
 spec = do
@@ -93,11 +93,11 @@ spec = do
       let --p1 :: CliParser Command (Int, Int)
           p1 = command "something" (,) <*> argumentWithMods (symbol "aaa" >> pure (1 :: Int)) "" (withCompletions ["bbb"]) <*> argumentWithMods (symbol "ccc" >> pure (2 :: Int)) "" (withCompletions ["ddd"])
           -- p2 :: CliParser Command (Int, Int)
-          p2 = command "nothing" ((,) (3 :: Int)) <*> argumentWithMods (symbol "ggg" >> pure (4 :: Int)) "" (withCompletions ["xxx"])
+          p2 = command "nothing" (3 :: Int,) <*> argumentWithMods (symbol "ggg" >> pure (4 :: Int)) "" (withCompletions ["xxx"])
           -- sum' :: CliParser Commands (Int, Int)
           sum' = p1 <|> p2
       it "prefixes" $ do
-        _prefixes sum' `shouldBe` [["nothing"], ["something"]]
+        _prefixes sum' `shouldBe` [["something"], ["nothing"]]
       it "parser" $ do
         runParser (parser sum') "something aaa ccc" `shouldBe` Right (1 :: Int, 2 :: Int)
         runParser (parser sum') "nothing ggg" `shouldBe` Right (3 :: Int, 4 :: Int)

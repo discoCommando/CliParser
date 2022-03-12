@@ -5,7 +5,6 @@ license: BSD3
 author: "Author name here"
 maintainer: "example@example.com"
 copyright: "2022 Author name here"
-compiler: ghc-8.10
 
 extra-source-files:
   - README.md
@@ -79,6 +78,8 @@ default-extensions: OverloadedStrings
   StandaloneDeriving
   MultiParamTypeClasses
   FlexibleInstances
+  LambdaCase
+  TupleSections
 
 ghc-options:
   - -Weverything
