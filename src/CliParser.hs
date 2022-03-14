@@ -236,6 +236,13 @@ argumentWithMods p argName mod =
         ]
     }
 
+optionalArgument :: Ord err => Parser err a -> Text -> CliParser err (Maybe a)
+optionalArgument p argName = optionalArgumentWithMods p argName mempty
+
+optionalArgumentWithMods :: Ord err => Parser err a -> Text -> Mod Argument -> CliParser err (Maybe a)
+optionalArgumentWithMods p argName =
+  argumentWithMods (Mega.try (Just <$> p) <|> pure Nothing) (argName <> "?")
+
 withCompletions :: [Text] -> Mod Argument
 withCompletions ts = Mod (ts, Nothing)
 

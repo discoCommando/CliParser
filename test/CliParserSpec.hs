@@ -3,6 +3,7 @@ module CliParserSpec where
 import CliParser
 import Common2 (runParser, symbol)
 import Control.Applicative ((<|>))
+import Data.Either (isLeft)
 import Data.Functor (($>))
 import Data.List.NonEmpty (toList)
 import Data.Text
@@ -38,10 +39,31 @@ spec = do
 
       it "parser" $ do
         runParser (parser t) p `shouldBe` Right ()
-      it "completion" $ do
-        runParser (completion t) "" `shouldBe` Right ["aaa", "bbb"]
+      describe "completion" $ do
+        it "empty" $
+          completions t "" `shouldBe` ["aaa", "bbb"]
+        it "first" $
+          completions t "a" `shouldBe` ["aaa"]
+        it "second" $
+          completions t "b" `shouldBe` ["bbb"]
+        it "none" $
+          completions t "x" `shouldBe` []
       it "descriptions" $ do
         _descriptions t `shouldBe` [[(["name"], Just "dupa dupa")]]
+
+    describe "optionalArgument" $ do
+      let p = "dupa"
+          t = optionalArgumentWithMods (symbol p >> pure ()) "name" $ withCompletions [p]
+
+      it "parser" $ do
+        runParser (parser t) p `shouldBe` Right (Just ())
+        runParser (parser t) "xd" `shouldBe` Right Nothing
+      it "completion" $ do
+        completions t "" `shouldBe` [p]
+        completions t "du" `shouldBe` [p]
+        completions t "x" `shouldBe` []
+      it "descriptions" $ do
+        _descriptions t `shouldBe` [[(["name?"], Nothing)]]
 
     describe "completionsHelper" $ do
       it "empty" $ do
@@ -68,10 +90,15 @@ spec = do
     describe "applicative" $ do
       let pt =
             commandWithMods "something" (,) (withDescription "sss" <> withAlias ["smth"])
-              <*> argumentWithMods (symbol "aaa" >> pure ()) "aa" (withCompletions ["aaa", "aaaa"] <> withDescription "AAA")
+              <*> optionalArgumentWithMods (symbol "aaa" >> pure ()) "aa" (withCompletions ["aaa", "aaaa"] <> withDescription "AAA")
               <*> argumentWithMods (symbol "ccc" >> pure ()) "cc" (withCompletions ["ccc", "cc"] <> withDescription "CCC")
-      it "parser" $ do
-        runParser (parser pt) "something aaa ccc" `shouldBe` Right ((), ())
+      describe "parser" $ do
+        it "just" $
+          runParser (parser pt) "something aaa ccc" `shouldBe` Right (Just (), ())
+        it "nothing" $
+          runParser (parser pt) "something ccc" `shouldBe` Right (Nothing, ())
+        it "nothing failed" $
+          runParser (parser pt) "something xx ccc" `shouldSatisfy` isLeft
       it "prefix" $ do
         _prefixes pt `shouldBe` [["something", "smth"]]
       describe "completion" $ do
@@ -82,6 +109,11 @@ spec = do
         it "whole first word" $ do
           completions pt "something" `shouldBe` ["something"]
         it "first word complete with space" $ do
+          -- actually this is not correct,
+          -- because there should be completions from the third
+          -- token as well, but that's for another time
+          -- I think it would require building
+          -- parser with a special AST
           completions pt "something " `shouldBe` ["aaa", "aaaa"]
         it "first word complete, substring of the second word" $ do
           completions pt "something aa" `shouldBe` ["aaa", "aaaa"]
@@ -93,8 +125,12 @@ spec = do
           completions pt "something aaa c" `shouldBe` ["ccc", "cc"]
         it "first and second word complete, whole third word" $ do
           completions pt "something aaa ccc" `shouldBe` ["ccc"]
+        xit "first word complete, substring of the third word" $ do
+          completions pt "something c" `shouldBe` ["ccc", "cc"]
+        xit "first  complete, whole third word" $ do
+          completions pt "something ccc" `shouldBe` ["ccc"]
       it "descriptions" $ do
-        _descriptions pt `shouldBe` [[(["something", "smth"], Just "sss"), (["aa"], Just "AAA"), (["cc"], Just "CCC")]]
+        _descriptions pt `shouldBe` [[(["something", "smth"], Just "sss"), (["aa?"], Just "AAA"), (["cc"], Just "CCC")]]
 
     describe "alternative" $ do
       let --p1 :: CliParser Command (Int, Int)
