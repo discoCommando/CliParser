@@ -16,12 +16,21 @@ import qualified Text.Megaparsec.Char.Lexer as Lexer
 data Cmd
   = Plus Int
   | Minus Int
+  | Whatevs
   | Result
   deriving stock (Show)
 
 cmdP :: CliParser Text Cmd
 cmdP =
-  (command "plus" Plus <*> argument Lexer.decimal "arg")
+  ( commandWithMods
+      "plus"
+      Plus
+      (withDescription "Adds a number to the storage" <> withAlias ["Plus", "+"])
+      <*> argumentWithMods
+        Lexer.decimal
+        "arg1"
+        (withDescription "Numeric argument ")
+  )
     <|> (command "minus" Minus <*> argument Lexer.decimal "arg")
     <|> command "result" Result
 

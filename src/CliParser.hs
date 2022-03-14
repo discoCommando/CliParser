@@ -1,7 +1,7 @@
 module CliParser where
 
 import Common2 (Parser, runParser, spaceConsumer, symbol)
-import Control.Lens ((%~), (&), (.~), (^.), (^?), _1, _2, to, view)
+import Control.Lens ((%~), (&), (.~), (^.), (^..), (^?), _1, _2, each, to, view)
 import Control.Monad.State ()
 import Data.Char (isSpace)
 import Data.Either (fromRight)
@@ -9,30 +9,42 @@ import Data.Functor (($>))
 import Data.Generics.Labels ()
 import Data.Generics.Product ()
 import Data.Generics.Sum ()
-import Data.List.NonEmpty (toList)
+import Data.List.NonEmpty (head, toList)
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.List.NonEmpty as Data
 import qualified Data.Map.Strict as Map
-import Data.Maybe (mapMaybe)
+import Data.Maybe (catMaybes, isJust, mapMaybe)
 import Data.Text (Text, last, unwords, words)
 import qualified Data.Text as Text
 import qualified Debug.Trace as Trace
 import GHC.Base (Alternative ((<|>), empty), NonEmpty ((:|)))
 import GHC.Generics (Generic)
 import Prettyprinter
-  ( Pretty (pretty),
+  ( (<+>),
+    Doc,
+    Pretty (pretty),
+    align,
     angles,
+    concatWith,
     encloseSep,
+    group,
+    hang,
+    hardline,
     hsep,
+    indent,
     lbrace,
+    nest,
     pipe,
     rbrace,
+    vcat,
     vsep,
   )
+import Prettyprinter.Util (reflow)
 import qualified Text.Megaparsec as Mega
 import Prelude hiding (mod)
 
 newtype Prefix = Prefix {unprefix :: NonEmpty Text}
-  deriving newtype (Eq, Ord)
+  deriving newtype (Eq, Ord, Show)
   deriving stock (Generic)
 
 instance Semigroup Prefix where
@@ -44,6 +56,7 @@ instance Pretty Prefix where
     x :| xs -> encloseSep lbrace rbrace pipe $ pretty <$> (x : xs) -- {x | y | z}
 
 newtype Description = Description {undescription :: Text}
+  deriving newtype (Show)
   deriving stock (Generic)
 
 instance Semigroup Description where
@@ -52,35 +65,50 @@ instance Semigroup Description where
 instance Monoid Description where
   mempty = Description mempty
 
+-- | WithDescription is a newtype wrapper used for
+--  printing out pretty description based on the
+--  first parameter.
+--
+--  ie for the Prefix, we don't write out the base command prefix
+--  but we write out aliases at the end.
+--
+--  And for argument, we write down the name of argument
+data WithDescription a = WithDescription {description :: Maybe Description, value :: a}
+  deriving stock (Show, Generic)
+
+vsep' :: [Maybe (Doc a)] -> Doc a
+vsep' = vsep . catMaybes
+
+hsep' :: [Maybe (Doc a)] -> Doc a
+hsep' = hsep . catMaybes
+
+instance Pretty (WithDescription Prefix) where
+  pretty (WithDescription mdescription (Prefix (_command :| rest))) =
+    vsep'
+      [ pretty <$> mdescription,
+        case rest of
+          [] -> Nothing
+          _ -> Just $ "Aliases:" <+> hsep (pretty <$> rest)
+      ]
+
+instance Pretty (WithDescription ArgumentName) where
+  pretty (WithDescription mdescription argumentName) =
+    case mdescription of
+      Nothing -> mempty
+      Just d -> pretty argumentName <+> "-" <+> align (pretty d)
+
 instance Pretty Description where
-  pretty (Description md) = pretty md
+  pretty (Description md) = reflow md
 
 newtype ArgumentName = ArgumentName Text
+  deriving newtype (Show)
 
 instance Pretty ArgumentName where
   pretty (ArgumentName argumentName) = angles $ pretty argumentName
 
-data CommandData = CommandData
-  { prefix :: Prefix,
-    description :: Maybe Description,
-    argumentNames :: [ArgumentName]
-  }
-  deriving stock (Generic)
-
-instance Pretty CommandData where
-  pretty cd =
-    vsep
-      [ hsep
-          (pretty (cd ^. #prefix) : fmap pretty (cd ^. #argumentNames)),
-        pretty $
-          cd ^. #description
-      ]
-
 data Command -- A command
 
 data Argument -- One argument
-
-data Commands -- More than one command
 
 type family Mod' a
 
@@ -90,22 +118,47 @@ type instance
       Maybe Description -- description
     )
 
-type instance Mod' Argument = [Text] -- completions
+type instance Mod' Argument = ([Text], Maybe Description) -- completions
 
-data Token = Arg ArgumentName | Pref Prefix
-  deriving stock (Generic)
+data Token = Arg (WithDescription ArgumentName) | Pref (WithDescription Prefix)
+  deriving stock (Generic, Show)
 
-data TextualRep = TextualRep
-  { tokens :: [Token],
-    description :: Maybe Description
+instance Pretty Token where
+  pretty = \case
+    Arg a -> pretty a
+    Pref p -> pretty p
+
+newtype TextualRep = TextualRep
+  { tokens :: [Token]
   }
-  deriving stock (Generic)
+  deriving stock (Generic, Show)
+
+vsepWithEmptyLine :: [Doc a] -> Doc a
+vsepWithEmptyLine = concatWith (\x y -> x <> hardline <> hardline <> y)
+
+instance Pretty TextualRep where
+  pretty trep =
+    let showDesc =
+          any
+            ( isJust . \case
+                Arg x -> x ^. #description
+                Pref x -> x ^. #description
+            )
+            $ trep ^. #tokens
+        desc = if showDesc then nest 4 $ group $ "-" <+> vsep (pretty <$> view #tokens trep) else mempty
+        cmd =
+          hsep $
+            ( \case
+                Arg x -> pretty $ view #value x
+                Pref x -> pretty $ view (#value . #unprefix . to Data.List.NonEmpty.head) x
+            )
+              <$> view #tokens trep
+     in indent 4 $ cmd <+> desc
 
 instance Semigroup TextualRep where
   a <> b =
     TextualRep
-      { tokens = a ^. #tokens <> b ^. #tokens,
-        description = a ^. #description -- we take the description from the first text rep only
+      { tokens = a ^. #tokens <> b ^. #tokens
       }
 
 -- | CliParser is a main structure that defines our
@@ -118,6 +171,13 @@ data CliParser err a = CliParser
     completion :: Parser err [Text]
   }
   deriving stock (Generic)
+
+-- instance needed for pretty instance
+instance Show (CliParser err a) where
+  show x = show $ x ^. #textualRep
+
+instance Pretty (CliParser err a) where
+  pretty cli = vsep ["Commands: ", vsep $ pretty <$> view #textualRep cli]
 
 prefixCompletionParser :: Ord err => Parser err ()
 prefixCompletionParser = spaceConsumer
@@ -140,8 +200,7 @@ commandWithMods prefix' a mod =
       completion = prefixCompletionParser $> (prefix' : unmod mod ^. _1),
       textualRep =
         [ TextualRep
-            { tokens = [Pref prefix''],
-              description = unmod mod ^. _2
+            { tokens = [Pref $ WithDescription (unmod mod ^. _2) prefix'']
             }
         ]
     }
@@ -151,8 +210,14 @@ commandWithMods prefix' a mod =
 withAlias :: [Text] -> Mod Command
 withAlias t = Mod (t, Nothing)
 
-withDescription :: Text -> Mod Command
-withDescription t = Mod ([], Just $ Description t)
+class HasDescription l where
+  withDescription :: Text -> Mod l
+
+instance HasDescription Command where
+  withDescription t = Mod ([], Just $ Description t)
+
+instance HasDescription Argument where
+  withDescription t = Mod ([], Just $ Description t)
 
 argument :: Parser err a -> Text -> CliParser err a
 argument p argumentName =
@@ -162,17 +227,16 @@ argumentWithMods :: Parser err a -> Text -> Mod Argument -> CliParser err a
 argumentWithMods p argumentName mod =
   CliParser
     { parser = p,
-      completion = pure (unmod mod),
+      completion = pure (unmod mod ^. _1),
       textualRep =
         [ TextualRep
-            { tokens = [Arg $ ArgumentName argumentName],
-              description = Nothing -- for now, perhaps add it in the future?
+            { tokens = [Arg $ WithDescription (unmod mod ^. _2) (ArgumentName argumentName)]
             }
         ]
     }
 
 withCompletions :: [Text] -> Mod Argument
-withCompletions = Mod
+withCompletions ts = Mod (ts, Nothing)
 
 -- | recover
 -- A function that returns a parser that consumes an input if succeeded
@@ -254,12 +318,12 @@ _prefixes cli =
       safeHead = \case
         x : _rest -> Just x
         _ -> Nothing
-   in mapMaybe (\x -> x ^? #tokens . to safeHead . #_Just . #_Pref . to (toList . unprefix)) textualReps
+   in mapMaybe (\x -> x ^? #tokens . to safeHead . #_Just . #_Pref . #value . to (toList . unprefix)) textualReps
 
-_descriptions :: CliParser err a -> [([Text], Maybe Text)]
-_descriptions cli =
-  let textualReps = cli ^. #textualRep
-      safeHead = \case
-        x : _rest -> Just x
-        _ -> Nothing
-   in mapMaybe (\x -> fmap (,x ^? #description . #_Just . #undescription) (x ^? #tokens . to safeHead . #_Just . #_Pref . to (toList . unprefix))) textualReps
+-- _descriptions :: CliParser err a -> [[([Text], Maybe Text)]]
+-- _descriptions cli =
+--   let textualReps = cli ^. #textualRep
+--       safeHead = \case
+--         x : _rest -> Just x
+--         _ -> Nothing
+--    in mapMaybe (\x -> fmap (,x ^? #description . #_Just . #undescription) (x ^? #tokens . to safeHead . #_Just . #_Pref . to (toList . unprefix))) textualReps
