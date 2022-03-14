@@ -92,19 +92,20 @@ instance Pretty (WithDescription Prefix) where
       ]
 
 instance Pretty (WithDescription ArgumentName) where
-  pretty (WithDescription mdescription argumentName) =
+  pretty (WithDescription mdescription argName) =
     case mdescription of
       Nothing -> mempty
-      Just d -> pretty argumentName <+> "-" <+> align (pretty d)
+      Just d -> pretty argName <+> "-" <+> align (pretty d)
 
 instance Pretty Description where
   pretty (Description md) = reflow md
 
-newtype ArgumentName = ArgumentName Text
+newtype ArgumentName = ArgumentName {argumentName :: Text}
   deriving newtype (Show)
+  deriving stock (Generic)
 
 instance Pretty ArgumentName where
-  pretty (ArgumentName argumentName) = angles $ pretty argumentName
+  pretty (ArgumentName argName) = angles $ pretty argName
 
 data Command -- A command
 
@@ -220,17 +221,17 @@ instance HasDescription Argument where
   withDescription t = Mod ([], Just $ Description t)
 
 argument :: Parser err a -> Text -> CliParser err a
-argument p argumentName =
-  argumentWithMods p argumentName mempty
+argument p argName =
+  argumentWithMods p argName mempty
 
 argumentWithMods :: Parser err a -> Text -> Mod Argument -> CliParser err a
-argumentWithMods p argumentName mod =
+argumentWithMods p argName mod =
   CliParser
     { parser = p,
       completion = pure (unmod mod ^. _1),
       textualRep =
         [ TextualRep
-            { tokens = [Arg $ WithDescription (unmod mod ^. _2) (ArgumentName argumentName)]
+            { tokens = [Arg $ WithDescription (unmod mod ^. _2) (ArgumentName argName)]
             }
         ]
     }
@@ -241,8 +242,8 @@ withCompletions ts = Mod (ts, Nothing)
 -- | recover
 -- A function that returns a parser that consumes an input if succeeded
 -- and does not consume any input if failed (and returning an empty list)
-recover :: Ord err => Parser err [Text] -> Parser err [Text]
-recover = fmap (fromRight []) . Mega.observing . Mega.try
+recover :: (Ord err, Monoid m) => Parser err m -> Parser err m
+recover = fmap (fromRight mempty) . Mega.observing . Mega.try
 
 completionsHelper :: Text -> (Text, Text)
 completionsHelper t
@@ -251,6 +252,10 @@ completionsHelper t
   | otherwise = (Data.Text.unwords $ Prelude.init ws, Prelude.last ws)
   where
     ws = Data.Text.words t
+
+-- addHelpCommand :: (Maybe Text -> a) -> CliParser err a
+-- addHelpCommand f =
+--   commandWithMods "help" f (withDescription "Help function") <*> argument
 
 completions :: CliParser err a -> Text -> [Text]
 completions cp input =
@@ -320,10 +325,12 @@ _prefixes cli =
         _ -> Nothing
    in mapMaybe (\x -> x ^? #tokens . to safeHead . #_Just . #_Pref . #value . to (toList . unprefix)) textualReps
 
--- _descriptions :: CliParser err a -> [[([Text], Maybe Text)]]
--- _descriptions cli =
---   let textualReps = cli ^. #textualRep
---       safeHead = \case
---         x : _rest -> Just x
---         _ -> Nothing
---    in mapMaybe (\x -> fmap (,x ^? #description . #_Just . #undescription) (x ^? #tokens . to safeHead . #_Just . #_Pref . to (toList . unprefix))) textualReps
+_descriptions :: CliParser err a -> [[([Text], Maybe Text)]]
+_descriptions cli =
+  let textualReps = cli ^.. #textualRep . each . #tokens
+   in fmap
+        ( \case
+            Pref p -> (p ^. #value . to (toList . unprefix), p ^? #description . #_Just . #undescription)
+            Arg a -> (a ^. #value . #argumentName . to (: []), a ^? #description . #_Just . #undescription)
+        )
+        <$> textualReps

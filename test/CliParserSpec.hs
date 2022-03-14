@@ -22,8 +22,8 @@ spec = do
         runParser (parser t) p `shouldBe` Right ()
       it "prefix" $ do
         _prefixes t `shouldBe` [["test", "alternative", ":t"]]
-      it "prefix" $ do
-        _descriptions t `shouldBe` [(["test", "alternative", ":t"], Just "description")]
+      it "descriptions" $ do
+        _descriptions t `shouldBe` [[(["test", "alternative", ":t"], Just "description")]]
       describe "completion" $ do
         it "empty word" $ do
           completions t "" `shouldBe` ["test", "alternative", ":t"]
@@ -34,12 +34,14 @@ spec = do
 
     describe "argument" $ do
       let p = "dupa"
-          t = argumentWithMods (symbol p >> pure ()) "" $ withCompletions ["aaa", "bbb"]
+          t = argumentWithMods (symbol p >> pure ()) "name" $ withCompletions ["aaa", "bbb"] <> withDescription "dupa dupa"
 
       it "parser" $ do
         runParser (parser t) p `shouldBe` Right ()
       it "completion" $ do
         runParser (completion t) "" `shouldBe` Right ["aaa", "bbb"]
+      it "descriptions" $ do
+        _descriptions t `shouldBe` [[(["name"], Just "dupa dupa")]]
 
     describe "completionsHelper" $ do
       it "empty" $ do
@@ -55,23 +57,26 @@ spec = do
 
     describe "recover" $ do
       it "happy path" $ do
-        runParser (recover (symbol "aaa" $> ["bbb"])) "aaa" `shouldBe` Right ["bbb"]
+        runParser (recover (symbol "aaa" $> ["bbb" :: Text])) "aaa" `shouldBe` Right ["bbb"]
       it "not happy path" $ do
-        runParser (recover (symbol "aaa" $> ["bbb"])) "ccc" `shouldBe` Right []
+        runParser (recover (symbol "aaa" $> ["bbb" :: Text])) "ccc" `shouldBe` Right []
       it "happy path does consumes an input" $ do
-        runParser (recover (symbol "aaa" $> ["bbb"]) *> Mega.takeRest) "aaa ccc" `shouldBe` Right "ccc" -- not sure if that's correct though
+        runParser (recover (symbol "aaa" $> ["bbb" :: Text]) *> Mega.takeRest) "aaa ccc" `shouldBe` Right "ccc" -- not sure if that's correct though
       it "not happy path does not consume any input" $ do
-        runParser (recover (symbol "aaa" $> ["bbb"]) *> Mega.takeRest) "xxx ccc" `shouldBe` Right "xxx ccc"
+        runParser (recover (symbol "aaa" $> ["bbb" :: Text]) *> Mega.takeRest) "xxx ccc" `shouldBe` Right "xxx ccc"
 
     describe "applicative" $ do
-      let pt = command "something" (,) <*> argumentWithMods (symbol "aaa" >> pure ()) "" (withCompletions ["aaa", "aaaa"]) <*> argumentWithMods (symbol "ccc" >> pure ()) "" (withCompletions ["ccc", "cc"])
+      let pt =
+            commandWithMods "something" (,) (withDescription "sss" <> withAlias ["smth"])
+              <*> argumentWithMods (symbol "aaa" >> pure ()) "aa" (withCompletions ["aaa", "aaaa"] <> withDescription "AAA")
+              <*> argumentWithMods (symbol "ccc" >> pure ()) "cc" (withCompletions ["ccc", "cc"] <> withDescription "CCC")
       it "parser" $ do
         runParser (parser pt) "something aaa ccc" `shouldBe` Right ((), ())
       it "prefix" $ do
-        _prefixes pt `shouldBe` [["something"]]
+        _prefixes pt `shouldBe` [["something", "smth"]]
       describe "completion" $ do
         it "empty word" $ do
-          completions pt "" `shouldBe` ["something"]
+          completions pt "" `shouldBe` ["something", "smth"]
         it "substring of the first word" $ do
           completions pt "somethin" `shouldBe` ["something"]
         it "whole first word" $ do
@@ -88,12 +93,14 @@ spec = do
           completions pt "something aaa c" `shouldBe` ["ccc", "cc"]
         it "first and second word complete, whole third word" $ do
           completions pt "something aaa ccc" `shouldBe` ["ccc"]
+      it "descriptions" $ do
+        _descriptions pt `shouldBe` [[(["something", "smth"], Just "sss"), (["aa"], Just "AAA"), (["cc"], Just "CCC")]]
 
     describe "alternative" $ do
       let --p1 :: CliParser Command (Int, Int)
-          p1 = command "something" (,) <*> argumentWithMods (symbol "aaa" >> pure (1 :: Int)) "" (withCompletions ["bbb"]) <*> argumentWithMods (symbol "ccc" >> pure (2 :: Int)) "" (withCompletions ["ddd"])
+          p1 = command "something" (,) <*> argumentWithMods (symbol "aaa" >> pure (1 :: Int)) "f" (withCompletions ["bbb"]) <*> argumentWithMods (symbol "ccc" >> pure (2 :: Int)) "arg2" (withCompletions ["ddd"] <> withDescription "argument numba 2")
           -- p2 :: CliParser Command (Int, Int)
-          p2 = command "nothing" (3 :: Int,) <*> argumentWithMods (symbol "ggg" >> pure (4 :: Int)) "" (withCompletions ["xxx"])
+          p2 = commandWithMods "nothing" (3 :: Int,) (withDescription "nothing there as well") <*> argumentWithMods (symbol "ggg" >> pure (4 :: Int)) "arg1" (withCompletions ["xxx"])
           -- sum' :: CliParser Commands (Int, Int)
           sum' = p1 <|> p2
       it "prefixes" $ do
@@ -112,3 +119,5 @@ spec = do
           completions sum' "something aaa " `shouldBe` ["ddd"]
         it "first word, second case" $ do
           completions sum' "nothing ggg " `shouldBe` ["xxx"]
+      it "descriptions" $ do
+        _descriptions sum' `shouldBe` [[(["something"], Nothing), (["f"], Nothing), (["arg2"], Just "argument numba 2")], [(["nothing"], Just "nothing there as well"), (["arg1"], Nothing)]]
